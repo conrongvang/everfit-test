@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,14 @@ import {
 import { UserEntity } from "./user.entity";
 
 @Entity("metrics")
+@Index(["user_id", "metric_type", "date_recorded"], { unique: false })
+@Index(["user_id", "date_recorded"], { unique: false })
+@Index(["date_recorded"], { unique: false })
+@Index(["user_id", "metric_type"], { unique: false })
+@Index(["user_id", "metric_type", "date_recorded", "unit"], {
+  unique: true,
+  where: "deleted_date IS NULL",
+})
 export class MetricEntity {
   @Exclude()
   @PrimaryGeneratedColumn("increment")
