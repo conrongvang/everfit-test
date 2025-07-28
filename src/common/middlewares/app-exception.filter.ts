@@ -4,7 +4,6 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ErrorCode, SYSTEM_ERROR_CODES } from "../constants/error-codes";
@@ -13,10 +12,11 @@ import {
   ValidationErrorResponseDto,
 } from "../dto/error-response.dto";
 import { AppException } from "../exceptions/app-exception";
+import { AppLoggerService } from "../utils/app-logger.service";
 
 @Catch()
 export class AppExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AppExceptionFilter.name);
+  private readonly logger = new AppLoggerService("EXCEPTION");
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -27,7 +27,6 @@ export class AppExceptionFilter implements ExceptionFilter {
     let errorResponse: ErrorResponseDto | ValidationErrorResponseDto;
 
     if (exception instanceof AppException) {
-      // Handle our custom AppException with error codes
       status = exception.getStatus();
       errorResponse = {
         statusCode: status,
@@ -37,7 +36,6 @@ export class AppExceptionFilter implements ExceptionFilter {
         timestamp: exception.timestamp,
       };
     } else if (exception instanceof HttpException) {
-      // Handle standard NestJS HttpExceptions
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
@@ -83,22 +81,32 @@ export class AppExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
       };
 
-      // Log unexpected errors
+      // Log unexpected errors with enhanced logging
       this.logger.error(
-        `Unexpected error: ${exception}`,
-        exception instanceof Error ? exception.stack : undefined,
-        `${request.method} ${request.url}`
+        exception instanceof Error ? exception : new Error(String(exception)),
+        {
+          correlationId: request.correlationId,
+          userId: request.userId,
+          userAgent: request.get("user-agent"),
+          ip: request.ip,
+          statusCode: status,
+          method: request.method,
+          url: request.url,
+        }
       );
     }
 
-    // Log all errors (except validation errors which are expected)
     if (status >= 500 || !(exception instanceof AppException)) {
       this.logger.error(`HTTP ${status} Error: ${errorResponse.message}`, {
         errorCode: errorResponse.errorCode,
         url: request.url,
         method: request.method,
+        correlationId: request.correlationId,
+        userId: request.userId,
         userAgent: request.get("user-agent"),
         ip: request.ip,
+        statusCode: status,
+        type: "HTTP_ERROR",
       });
     }
 
@@ -129,7 +137,7 @@ export class AppExceptionFilter implements ExceptionFilter {
   private mapHttpStatusToErrorCode(status: HttpStatus): string {
     switch (status) {
       case HttpStatus.BAD_REQUEST:
-        return SYSTEM_ERROR_CODES.INTERNAL_SERVER_ERROR; // Default, should be overridden
+        return SYSTEM_ERROR_CODES.INTERNAL_SERVER_ERROR;
       case HttpStatus.UNAUTHORIZED:
         return SYSTEM_ERROR_CODES.UNAUTHORIZED;
       case HttpStatus.FORBIDDEN:
