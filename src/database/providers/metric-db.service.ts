@@ -13,7 +13,7 @@ export interface IMetricRepository {
   ): Promise<[MetricEntity[], number]>;
   getChartData(
     queryDto: ChartDataQueryDto
-  ): Promise<{ date: Date; value: string; unit: string; created_date: Date }[]>;
+  ): Promise<{ created_date: Date; date: Date; unit: string; value: string }[]>;
 }
 
 @Injectable()
@@ -53,6 +53,7 @@ export class MetricDbService implements IMetricRepository {
   }
 
   async getMetricsByType(queryDto: QueryMetricsDto) {
+    const startTime = Date.now();
     const { userId, metricType, page = 1, limit = 10 } = queryDto;
     const skip = (page - 1) * limit;
 
@@ -69,10 +70,21 @@ export class MetricDbService implements IMetricRepository {
       take: limit,
     });
 
+    const duration = Date.now() - startTime;
+    if (duration > 100) {
+      console.warn(`Slow query detected: getMetricsByType took ${duration}ms`);
+    }
+
     return result;
   }
 
-  async getChartData(queryDto: ChartDataQueryDto) {
+  async getChartData(
+    queryDto: ChartDataQueryDto
+  ): Promise<
+    { created_date: Date; date: Date; unit: string; value: string }[]
+  > {
+    const startTime = Date.now();
+
     const { userId, metricType, timePeriod } = queryDto;
     const endDate = new Date();
     const startDate = new Date();
@@ -93,17 +105,26 @@ export class MetricDbService implements IMetricRepository {
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
       })
+      .andWhere("metric.deleted_date IS NULL")
       .andWhere(
         `metric.created_date = (
-        SELECT MAX(m2.created_date)
-        FROM metrics m2
-        WHERE m2.user_id = metric.user_id
-          AND m2.metric_type = metric.metric_type
+        SELECT MAX(m2.created_date) 
+        FROM metrics m2 
+        WHERE m2.user_id = metric.user_id 
+          AND m2.metric_type = metric.metric_type 
           AND DATE(m2.date_recorded) = DATE(metric.date_recorded)
-        )`
+          AND m2.deleted_date IS NULL
+      )`
       )
       .orderBy("DATE(metric.date_recorded)", "ASC")
       .getRawMany();
+
+    const duration = Date.now() - startTime;
+    if (duration > 200) {
+      console.warn(
+        `Slow chart query detected: ${duration}ms for user ${userId}, type ${metricType}`
+      );
+    }
 
     return result;
   }
