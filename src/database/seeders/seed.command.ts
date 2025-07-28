@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "@src/app.module";
+import { BulkSeedService } from "./bulk-seed.service";
 import { SeedModule } from "./seed.module";
 import { SeedService } from "./seed.service";
 
@@ -7,11 +8,22 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const seedService = app.select(SeedModule).get(SeedService, { strict: true });
+  const performanceSeedService = app
+    .select(SeedModule)
+    .get(BulkSeedService, { strict: true });
 
   try {
     const command = process.argv[2];
 
     switch (command) {
+      case "full":
+        const userCount = parseInt(process.argv[3]) || 1000;
+        const daysBack = parseInt(process.argv[4]) || 365;
+        await performanceSeedService.seedForPerformanceTest(
+          userCount,
+          daysBack
+        );
+        break;
       case "all":
         await seedService.seedAll();
         break;
