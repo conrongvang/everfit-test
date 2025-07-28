@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppConfigs } from "../app.config";
+import { MetricEntity } from "./entities/metric.entity";
+import { UserEntity } from "./entities/user.entity";
 
 @Module({
   imports: [
@@ -17,7 +19,7 @@ import { AppConfigs } from "../app.config";
         logging: !AppConfigs.isProd ? ["query", "error"] : ["error"],
       }),
     }),
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([UserEntity, MetricEntity]),
   ],
   providers: [],
   exports: [],
