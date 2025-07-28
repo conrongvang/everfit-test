@@ -6,6 +6,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { MetricEntity } from "../database/entities/metric.entity";
+import { ChartDataQueryDto } from "./dto/chart-data-query.dto";
+import { ChartDataResponseDto } from "./dto/chart-data-response.dto";
 import {
   CreateMetricDto,
   CreateMetricResponseDto,
@@ -60,5 +62,26 @@ export class MetricsController {
     @Query() queryDto: QueryMetricsDto
   ): Promise<MetricListResponseDto> {
     return await this.metricsService.getMetricsByType(queryDto);
+  }
+
+  @Get("chart-data")
+  @ApiOperation({
+    summary: "Get chart data",
+    description:
+      "Get data for drawing charts with latest metric per day for specified time period. Supports unit conversion.",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Chart data retrieved successfully",
+    type: ChartDataResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: "Invalid query parameters",
+  })
+  async getChartData(
+    @Query() queryDto: ChartDataQueryDto
+  ): Promise<ChartDataResponseDto> {
+    return await this.metricsService.getChartData(queryDto);
   }
 }

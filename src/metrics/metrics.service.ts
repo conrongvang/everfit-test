@@ -7,6 +7,11 @@ import {
 } from "../common/constants/metric-units";
 import { UnitConversionService } from "../common/utils/unit-conversion.service";
 import { MetricDbService } from "../database/providers/metric-db.service";
+import { ChartDataQueryDto } from "./dto/chart-data-query.dto";
+import {
+  ChartDataPointDto,
+  ChartDataResponseDto,
+} from "./dto/chart-data-response.dto";
 import {
   CreateMetricDto,
   CreateMetricResponseDto,
@@ -19,6 +24,7 @@ interface IMetricService {
     createMetricDto: CreateMetricDto
   ): Promise<CreateMetricResponseDto>;
   getMetricsByType(queryDto: QueryMetricsDto): Promise<MetricListResponseDto>;
+  getChartData(queryDto: ChartDataQueryDto): Promise<ChartDataResponseDto>;
 }
 
 @Injectable()
@@ -72,6 +78,45 @@ export class MetricsService implements IMetricService {
       page,
       limit,
       totalPages,
+    };
+  }
+
+  async getChartData(
+    queryDto: ChartDataQueryDto
+  ): Promise<ChartDataResponseDto> {
+    const { metricType, timePeriod, targetUnit } = queryDto;
+
+    if (targetUnit) {
+      this.validateUnit(metricType, targetUnit);
+    }
+
+    const metrics = await this.metricDbService.getChartData(queryDto);
+
+    const chartData: ChartDataPointDto[] = (metrics || []).map((metric) => {
+      const dataPoint = plainToClass(ChartDataPointDto, metric, {
+        excludeExtraneousValues: true,
+      });
+
+      if (targetUnit && targetUnit !== metric.unit) {
+        dataPoint.originalValue = dataPoint.value;
+        dataPoint.value = this.unitConversionService.convertValue(
+          dataPoint.value,
+          metric.unit,
+          targetUnit,
+          metricType
+        );
+        dataPoint.convertedUnit = targetUnit;
+      }
+
+      return dataPoint;
+    });
+
+    return {
+      data: chartData,
+      metricType,
+      timePeriod,
+      targetUnit,
+      totalPoints: chartData.length,
     };
   }
 }
