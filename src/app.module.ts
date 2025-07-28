@@ -2,9 +2,10 @@ import { HttpModule } from "@nestjs/axios";
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { HealthModule } from "./health/health.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
-  imports: [HttpModule, HealthModule],
+  imports: [HttpModule, HealthModule, UsersModule],
   controllers: [AppController],
   providers: [],
 })

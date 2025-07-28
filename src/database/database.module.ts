@@ -3,6 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppConfigs } from "../app.config";
 import { MetricEntity } from "./entities/metric.entity";
 import { UserEntity } from "./entities/user.entity";
+import { UsersDbService } from "./providers/user-db.service";
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { UserEntity } from "./entities/user.entity";
     }),
     TypeOrmModule.forFeature([UserEntity, MetricEntity]),
   ],
-  providers: [],
-  exports: [],
+  providers: [UsersDbService],
+  exports: [UsersDbService],
 })
 export class DatabaseModule {}
