@@ -1,5 +1,5 @@
+import { METRIC_TYPES, MetricType } from "@src/common/constants/metric-units";
 import { Exclude, Expose } from "class-transformer";
-import { METRIC_TYPES, MetricType } from "src/common/constants/metric-units";
 import {
   Column,
   CreateDateColumn,
