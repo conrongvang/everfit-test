@@ -1,0 +1,38 @@
+version: "3"
+services:
+  server:
+    container_name: tracking-metrics-backend
+    build: .
+    volumes:
+      - .:/apps/test
+      - ./dist:/apps/test/build
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      BE_HOST_PORT: ${BE_HOST_PORT}
+    ports:
+      - ${BE_HOST_PORT}:${BE_HOST_PORT}
+    command: bash -c "npm i && npm run start:dev"
+    depends_on:
+      - tracking_metrics_postgres
+    tty: true
+    stdin_open: true
+    restart: always
+  tracking_metrics_postgres:
+    image: postgres:14.1-alpine
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - ./data:/var/lib/stock/data
+    cpus: 2
+    mem_limit: 2g
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    tty: true
+    stdin_open: true
+    restart: always

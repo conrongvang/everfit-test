@@ -1,0 +1,15 @@
+version: "3"
+services:
+  tracking_metrics_postgres_test:
+    image: postgres:14.1-alpine
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - ./data:/var/lib/stock/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    tty: true
+    stdin_open: true
+    restart: always
