@@ -1,5 +1,5 @@
 import { ValidationPipe, VersioningType } from "@nestjs/common";
-import { HttpAdapterHost, NestFactory } from "@nestjs/core";
+import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as compression from "compression";
@@ -9,8 +9,7 @@ import { AppConfigs } from "./app.config";
 import { AppModule } from "./app.module";
 import { ResponseTransformerInterceptor } from "./common/interceptors/response-transformer.interceptor";
 import { TimeoutInterceptor } from "./common/interceptors/timeout.interceptor";
-import { AllExceptionsFilter } from "./common/middlewares/all-exception.filter";
-import { HttpExceptionFilter } from "./common/middlewares/http-exception.filter";
+import { AppExceptionFilter } from "./common/middlewares/app-exception.filter";
 
 async function swaggerBuilder(app: NestExpressApplication) {
   const swaggerConfig = new DocumentBuilder()
@@ -38,8 +37,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const { httpAdapter } = app.get(HttpAdapterHost);
-
   app
     .setGlobalPrefix("/api")
     .enableVersioning({ type: VersioningType.URI })
@@ -48,8 +45,7 @@ async function bootstrap() {
         contentSecurityPolicy: AppConfigs.isProd ? true : false,
       })
     )
-    .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
-    .useGlobalFilters(new HttpExceptionFilter())
+    .useGlobalFilters(new AppExceptionFilter())
     .useGlobalInterceptors(new ResponseTransformerInterceptor())
     .useGlobalInterceptors(new TimeoutInterceptor());
 

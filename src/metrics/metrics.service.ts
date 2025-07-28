@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { plainToClass } from "class-transformer";
+import { METRICS_ERROR_CODES } from "../common/constants/error-codes";
 import {
   DISTANCE_UNITS,
   METRIC_TYPES,
   TEMPERATURE_UNITS,
 } from "../common/constants/metric-units";
+import { BadRequestAppException } from "../common/exceptions/app-exception";
 import { UnitConversionService } from "../common/utils/unit-conversion.service";
 import { MetricDbService } from "../database/providers/metric-db.service";
 import { ChartDataQueryDto } from "./dto/chart-data-query.dto";
@@ -41,11 +43,15 @@ export class MetricsService implements IMetricService {
         : Object.values(TEMPERATURE_UNITS);
 
     if (!validUnits.includes(unit as never)) {
-      throw new BadRequestException(
-        `Invalid unit '${unit}' for metric type '${metricType}'. Valid units: ${validUnits.join(
-          ", "
-        )}`
-      );
+      throw new BadRequestAppException({
+        errorCode: METRICS_ERROR_CODES.INVALID_UNIT,
+        message: `Invalid unit '${unit}' for metric type '${metricType}'`,
+        details: {
+          providedUnit: unit,
+          validUnits: validUnits,
+          metricType: metricType,
+        },
+      });
     }
   }
 

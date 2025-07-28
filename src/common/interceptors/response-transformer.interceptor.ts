@@ -16,14 +16,20 @@ export interface Response<T> {
   error?: any;
 }
 
+export interface SuccessResponse<T> {
+  statusCode: number;
+  data: T;
+  timestamp: string;
+}
+
 @Injectable()
 export class ResponseTransformerInterceptor<T>
-  implements NestInterceptor<T, Response<T>>
+  implements NestInterceptor<T, Response<T> | SuccessResponse<T>>
 {
   intercept(
     context: ExecutionContext,
     next: CallHandler
-  ): Observable<Response<T>> {
+  ): Observable<Response<T> | SuccessResponse<T>> {
     if (context.getType<GqlContextType>() !== "graphql") {
       const request = context.switchToHttp().getRequest();
 
@@ -42,15 +48,22 @@ export class ResponseTransformerInterceptor<T>
 
         const response = context.switchToHttp().getResponse();
 
+        // Handle successful responses
         if (successRespCode.includes(response.statusCode)) {
-          return { statusCode: response.statusCode, data: data };
+          return {
+            statusCode: response.statusCode,
+            data: data,
+            timestamp: new Date().toISOString(),
+          } as SuccessResponse<T>;
         }
 
+        // Handle error responses (this should rarely be hit due to exception filters)
+        // But kept for backward compatibility
         return {
           statusCode: response.statusCode,
           message: data.message,
           error: data.error,
-        };
+        } as Response<T>;
       })
     );
   }
