@@ -11,11 +11,14 @@ import {
   CreateMetricDto,
   CreateMetricResponseDto,
 } from "./dto/create-metric.dto";
+import { MetricListResponseDto } from "./dto/metric-list-response.dto";
+import { QueryMetricsDto } from "./dto/query-metrics.dto";
 
 interface IMetricService {
   createMetric(
     createMetricDto: CreateMetricDto
   ): Promise<CreateMetricResponseDto>;
+  getMetricsByType(queryDto: QueryMetricsDto): Promise<MetricListResponseDto>;
 }
 
 @Injectable()
@@ -49,5 +52,26 @@ export class MetricsService implements IMetricService {
       excludeExtraneousValues: true,
     });
     return data;
+  }
+
+  async getMetricsByType(
+    queryDto: QueryMetricsDto
+  ): Promise<MetricListResponseDto> {
+    const { page = 1, limit = 10 } = queryDto;
+    const [metrics, total] = await this.metricDbService.getMetricsByType(
+      queryDto
+    );
+    const totalPages = Math.ceil(total / limit);
+    const data = plainToClass(CreateMetricResponseDto, metrics, {
+      excludeExtraneousValues: true,
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }

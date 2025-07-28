@@ -1,11 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreateMetricDto } from "@src/metrics/dto/create-metric.dto";
+import { QueryMetricsDto } from "@src/metrics/dto/query-metrics.dto";
 import { Repository } from "typeorm";
 import { MetricEntity } from "../entities/metric.entity";
 
 export interface IMetricRepository {
   createMetric(createMetricDto: CreateMetricDto): Promise<MetricEntity>;
+  getMetricsByType(
+    queryDto: QueryMetricsDto
+  ): Promise<[MetricEntity[], number]>;
 }
 
 @Injectable()
@@ -42,5 +46,25 @@ export class MetricDbService implements IMetricRepository {
     });
 
     return await this.metricRepository.save(metric);
+  }
+
+  async getMetricsByType(queryDto: QueryMetricsDto) {
+    const { userId, metricType, page = 1, limit = 10 } = queryDto;
+    const skip = (page - 1) * limit;
+
+    const result = await this.metricRepository.findAndCount({
+      where: {
+        user_id: userId,
+        metric_type: metricType,
+      },
+      order: {
+        date_recorded: "DESC",
+        created_date: "DESC",
+      },
+      skip,
+      take: limit,
+    });
+
+    return result;
   }
 }

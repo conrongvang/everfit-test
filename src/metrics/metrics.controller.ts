@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Post, Query } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,6 +10,8 @@ import {
   CreateMetricDto,
   CreateMetricResponseDto,
 } from "./dto/create-metric.dto";
+import { MetricListResponseDto } from "./dto/metric-list-response.dto";
+import { QueryMetricsDto } from "./dto/query-metrics.dto";
 import { MetricsService } from "./metrics.service";
 
 @ApiTags("Metrics")
@@ -37,5 +39,26 @@ export class MetricsController {
     @Body() createMetricDto: CreateMetricDto
   ): Promise<CreateMetricResponseDto> {
     return await this.metricsService.createMetric(createMetricDto);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: "Get metrics by type",
+    description:
+      "Retrieve a list of all metrics filtered by type (Distance/Temperature) for a specific user",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Metrics retrieved successfully",
+    type: MetricListResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: "Invalid query parameters",
+  })
+  async getMetricsByType(
+    @Query() queryDto: QueryMetricsDto
+  ): Promise<MetricListResponseDto> {
+    return await this.metricsService.getMetricsByType(queryDto);
   }
 }
