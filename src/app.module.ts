@@ -2,6 +2,7 @@ import { HttpModule } from "@nestjs/axios";
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { CorrelationIdMiddleware } from "./common/middlewares/correlation-id.middleware";
 import { ContextService } from "./common/utils/context.service";
 import { SeedModule } from "./database/seeders/seed.module";
 import { HealthModule } from "./health/health.module";
@@ -16,6 +17,6 @@ import { UsersModule } from "./users/users.module";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply().forRoutes("*");
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
   }
 }
