@@ -7,7 +7,7 @@ services:
       - .:/apps/test
       - ./dist:/apps/test/build
     environment:
-      DB_HOST: ${DB_HOST}
+      DB_HOST: tracking_metrics_postgres
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
