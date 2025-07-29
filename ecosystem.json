@@ -1,0 +1,33 @@
+{
+  "apps": [
+    {
+      "name": "tracking-metrics",
+      "script": "./dist/src/main.js",
+      "instances": 1,
+      "exec_mode": "cluster",
+      "watch": false,
+      "max_memory_restart": "1G",
+      "env": {
+        "NODE_ENV": "development",
+        "BE_HOST_PORT": 5001
+      },
+      "env_production": {
+        "NODE_ENV": "production",
+        "BE_HOST_PORT": 5001
+      },
+      "log_file": "./logs/combined/combined.log",
+      "out_file": "./logs/out/out.log",
+      "error_file": "./logs/error/error.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "autorestart": true,
+      "kill_timeout": 5000,
+      "listen_timeout": 3000,
+      "health_check_grace_period": 3000,
+      "source_map_support": true,
+      "merge_logs": true,
+      "time": true
+    }
+  ]
+}

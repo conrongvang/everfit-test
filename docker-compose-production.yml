@@ -1,0 +1,57 @@
+services:
+  server:
+    container_name: tracking-metrics-backend
+    build: .
+    volumes:
+      - .:/app
+      - ./dist:/app/dist
+    environment:
+      DB_HOST: tracking_metrics_postgres
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      BE_HOST_PORT: ${BE_HOST_PORT}
+    ports:
+      - ${BE_HOST_PORT}:${BE_HOST_PORT}
+    depends_on:
+      - tracking_metrics_postgres
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+    networks:
+      tracking_metrics_network:
+        ipv4_address: 172.28.0.2
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+        reservations:
+          memory: 512M
+          cpus: "0.25"
+  tracking_metrics_postgres:
+    image: postgres:14.1-alpine
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - ./data:/var/lib/stock/data
+    cpus: 2
+    mem_limit: 2g
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    tty: true
+    stdin_open: true
+    restart: always
+    networks:
+      tracking_metrics_network:
+        ipv4_address: 172.28.0.3
+networks:
+  tracking_metrics_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/24

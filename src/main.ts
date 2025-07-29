@@ -32,6 +32,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.ALLOWED_ORIGINS?.split(",") || [
       `http://localhost:${AppConfigs.port}`,
+      `http://host.docker.internal:${AppConfigs.port}`,
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
@@ -42,7 +43,7 @@ async function bootstrap() {
     .enableVersioning({ type: VersioningType.URI })
     .use(
       helmet({
-        contentSecurityPolicy: AppConfigs.isProd ? true : false,
+        contentSecurityPolicy: AppConfigs.isProd,
       })
     )
     .useGlobalFilters(new AppExceptionFilter())
